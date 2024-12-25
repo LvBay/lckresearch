@@ -5,13 +5,14 @@ type MatchInfo struct {
 	ChampionId   int
 	SummonerName string
 	ItemList     []Item
+	GameTime     int
 }
 
 type GetMatchListReq struct {
 	CommonParam
-	SummonerId string
-	StartTime  int64
-	EndTime    int64
+	SummonerInfo
+	StartTime int64
+	EndTime   int64
 }
 
 type MatchCrawler interface {

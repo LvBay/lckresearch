@@ -8,6 +8,8 @@ import (
 
 func TestSummonerRankCrawler_GetSummonerRank(t *testing.T) {
 	s := &SummonerRankCrawler{}
-	got := s.GetSummonerRank(service.GetSummonerRankReq{Start: 1, End: 3})
+	req := service.GetSummonerRankReq{Start: 1, End: 3}
+	req.Region = "kr"
+	got := s.GetSummonerRank(req)
 	log.Println(got)
 }

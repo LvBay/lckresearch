@@ -46,12 +46,12 @@ type ResearchResData struct {
 func (r *Researcher) Research(req ResearchReq) ResearchRes {
 	res := ResearchRes{}
 	summonIds := r.Sc.GetSummonerRank(GetSummonerRankReq{})
-	for _, summonId := range summonIds {
+	for _, summoner := range summonIds {
 		matchInfos, err := r.Mc.GetMatchList(GetMatchListReq{
-			CommonParam: req.CommonParam,
-			SummonerId:  summonId,
-			StartTime:   req.StartTime,
-			EndTime:     req.EndTime,
+			CommonParam:  req.CommonParam,
+			SummonerInfo: summoner,
+			StartTime:    req.StartTime,
+			EndTime:      req.EndTime,
 		})
 		if err != nil {
 			continue

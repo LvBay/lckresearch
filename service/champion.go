@@ -8,10 +8,12 @@ type ItemPerformance struct {
 }
 
 type ChampionItemPerformance struct {
-	One  ItemPerformance
-	Two  []ItemPerformance
-	Tree []ItemPerformance
-	Four []ItemPerformance
+	ChampionId int
+	Lane       string
+
+	Two   [][]ItemPerformance
+	Three [][]ItemPerformance
+	Four  [][]ItemPerformance
 }
 
 type GetChampionItemPerformanceReq struct {

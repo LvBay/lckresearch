@@ -13,7 +13,14 @@ type GetSummonerRankReq struct {
 	End   int
 }
 
+type SummonerInfo struct {
+	ID      string
+	Name    string
+	URLPath string
+	Matchs  []*MatchInfo
+}
+
 type SummonerRankCrawler interface {
 	// 获取召唤师排名
-	GetSummonerRank(req GetSummonerRankReq) []string
+	GetSummonerRank(req GetSummonerRankReq) []SummonerInfo
 }

@@ -54,7 +54,8 @@ func (s *SummonerRankCrawler) GetSummonerRank(req service.GetSummonerRankReq) []
 		if stop {
 			break
 		}
-		u := fmt.Sprintf("https://www.op.gg/leaderboards/tier?region=%s&page=%d", region, i)
+		u := fmt.Sprintf("https://www.op.gg/leaderboards/tier?region=%s&type=ladder&page=%d", region, i)
+		log.Println("访问:", u)
 		rankCollector.Visit(u)
 	}
 	log.Printf("抓取%s rank选手排行，数量:%d\n", region, len(summonerList))
