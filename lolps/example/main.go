@@ -8,11 +8,12 @@ import (
 
 func main() {
 	lolps.GetBaseItems()
+	lolps.InitChampionNames()
 	ins := lolps.SummonerRankCrawler{}
 	req := service.GetSummonerRankReq{}
 	req.Region = "kr"
-	req.Start = 2
-	req.End = 3
+	req.Start = 1
+	req.End = 5
 	res := ins.GetSummonerRank(req)
 	log.Println("ur:", res[0].URLPath)
 	champIns := lolps.LolPsChampionCrawler{}
@@ -37,4 +38,5 @@ func main() {
 			}
 		}
 	}
+	log.Println("res:", lolps.ToString(lolps.CompareRes))
 }
