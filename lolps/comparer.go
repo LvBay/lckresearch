@@ -2,7 +2,6 @@ package lolps
 
 import (
 	"context"
-	"fmt"
 	"lckresearch/service"
 	"log"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 type LolPsComparer struct {
 }
 
+var CompareRes = make(map[string]int, 100)
+
 func (l *LolPsComparer) Compare(matchInfo service.MatchInfo, perf service.ChampionItemPerformance) (diff bool) {
 	// 比较对局出装和常规出装
 	// 如果diff，则返回true
@@ -31,8 +32,11 @@ func (l *LolPsComparer) Compare(matchInfo service.MatchInfo, perf service.Champi
 		diff = compareItems(items, perf.Four)
 	}
 	if diff {
+		itemsStr := itemsToString(fiterItems(matchInfo))
 		log.Println("发现新套路", getChampionName(matchInfo.ChampionId),
-			"对局出装:", itemsToString(fiterItems(matchInfo)))
+			"对局出装:", itemsStr)
+		key := getChampionName(matchInfo.ChampionId) + "_" + itemsStr
+		CompareRes[key]++
 	}
 
 	return false
@@ -73,6 +77,12 @@ func buildKey(items []service.Item) string {
 }
 
 func itemsToString(items []service.Item) string {
+	newItems := make([]service.Item, len(items))
+	copy(newItems, items)
+	sort.Slice(newItems, func(i, j int) bool {
+		return newItems[i].ItemId < newItems[j].ItemId
+	})
+
 	str := make([]string, 0, len(items))
 	for _, v := range items {
 		str = append(str, v.ItemName)
@@ -137,36 +147,4 @@ var dataClient = gclient.New().Use(headerMid)
 func headerMid(cli *gclient.Client, r *http.Request) (response *gclient.Response, err error) {
 	r.Header.Set("user-agent", "curl/7.88.1")
 	return cli.Next(r)
-}
-
-func getItem(id int) ItemInfo {
-	itemVal, _ := itemCache.GetOrSetFunc(context.Background(), id, func(ctx context.Context) (value interface{}, err error) {
-		url := fmt.Sprintf("https://lol.ps/api/info/item-info/%d", id)
-		val := dataClient.GetVar(context.Background(), url)
-		item := ItemInfo{}
-		gjson.New(val).Get("data").Struct(&item)
-		return item, nil
-	}, 0)
-	return itemVal.Interface().(ItemInfo)
-}
-
-var champNameCache = make(map[int]string, 200)
-
-type ChampName struct {
-	NameCn     string
-	ChampionId int
-}
-
-func InitChampionNames() {
-	url := "https://lol.ps/api/info/champion-names"
-	val := dataClient.GetVar(context.Background(), url)
-	list := []ChampName{}
-	gjson.New(val).Get("data").Struct(&list)
-	for _, v := range list {
-		champNameCache[v.ChampionId] = v.NameCn
-	}
-}
-
-func getChampionName(id int) string {
-	return champNameCache[id]
 }
