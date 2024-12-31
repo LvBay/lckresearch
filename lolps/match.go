@@ -17,11 +17,11 @@ type LolPsMatchCrawler struct {
 
 // 获取比赛信息 实现service.MatchCrawler
 func (l *LolPsMatchCrawler) GetMatchList(req service.GetMatchListReq) ([]service.MatchInfo, error) {
-	u := "https://lol.ps/summoner" + "/칼과 창 방패_KR1?sid=nenuR9JdGcGKe0mFNp7B6O3jOvSXCnnf91u69FpoWpcbReo&region=kr"
+	u := "https://lol.ps" + req.URLPath
 	log.Println("u:", u)
-	page := localBrowser.MustPage(u)
+	page := smartPage(u)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 	log.Println("sleep 5s")
 
 	// 模拟点击下一页，加载更多比赛数据
@@ -31,12 +31,12 @@ func (l *LolPsMatchCrawler) GetMatchList(req service.GetMatchListReq) ([]service
 		h := el.MustHTML()
 		log.Println("html:", h)
 		el.MustClick()
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 
 	matchList := make([]service.MatchInfo, 0, 60)
 
-	for line := 1; line <= 3; line++ {
+	for line := 1; line <= 50; line++ {
 		items := make([]service.Item, 0, 7)
 		match := service.MatchInfo{}
 		// 英雄
@@ -46,16 +46,15 @@ func (l *LolPsMatchCrawler) GetMatchList(req service.GetMatchListReq) ([]service
 		// 装备
 		for itemIdx := 1; itemIdx <= 7; itemIdx++ {
 			x := fmt.Sprintf(`//*[@id="content-container"]/div[2]/section/div/div[2]/div[2]/div[%d]/div/div[1]/div/div[2]/div[1]/div[2]/div[%d]/div/div/img`, line, itemIdx)
-			log.Println("x:", x)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 			pageWithCancel := page.Context(ctx)
 			go func() {
-				time.Sleep(2 * time.Second)
+				time.Sleep(500 * time.Millisecond)
 				cancel()
 			}()
 			el, err := pageWithCancel.ElementX(x)
 			if err != nil {
-				log.Println("err", err)
+				// log.Println("err", err)
 				continue
 			}
 			id := getItemIdFromImgSrc(el)
@@ -66,9 +65,9 @@ func (l *LolPsMatchCrawler) GetMatchList(req service.GetMatchListReq) ([]service
 
 		matchList = append(matchList, match)
 	}
-	log.Println("matchList:", ToString(matchList))
+	log.Println("matchList:", len(matchList))
 
-	return nil, nil
+	return matchList, nil
 }
 
 func getItemIdFromImgSrc(el *rod.Element) string {

@@ -8,7 +8,7 @@ import (
 func TestGetChampionItemPerformance(t *testing.T) {
 	ins := LolPsChampionCrawler{}
 	req := service.GetChampionItemPerformanceReq{
-		ChampionId: 62,
+		ChampionId: 65,
 	}
 	ins.GetChampionItemPerformance(req)
 }

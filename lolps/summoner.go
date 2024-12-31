@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/go-rod/rod"
 )
@@ -39,16 +40,24 @@ func (s *SummonerRankCrawler) GetSummonerRank(req service.GetSummonerRankReq) []
 		pageStart = pageEnd
 	}
 	count := req.End - req.Start + 1
+	var err error
+	var el *rod.Element
 	for page := pageStart; page <= pageEnd; page++ {
 		if len(summonerList) >= req.End-req.Start+1 {
 			break
 		}
-		page := localBrowser.MustPage(fmt.Sprintf("https://lol.ps/ranking/?lane=-1&page=%d&region=%s", page, region))
+		page := smartPage(fmt.Sprintf("https://lol.ps/ranking/?lane=-1&page=%d&region=%s", page, region))
 		for i := 1; i <= 50; i++ {
 			if count <= 0 {
 				break
 			}
-			el := page.MustElementX(fmt.Sprintf(`//*[@id="content-container"]/div[4]/div[%d]/div[1]/a[1]`, i))
+
+			el, err = page.Timeout(2 * time.Second).ElementX(fmt.Sprintf(`//*[@id="content-container"]/div[4]/div[%d]/div[1]/a[1]`, i))
+			if err != nil {
+				str, _ := page.HTML()
+				log.Printf("获取summoner 列表失败:%v", str)
+				break
+			}
 			if el == nil {
 				break
 			}
@@ -71,4 +80,21 @@ func (s *SummonerRankCrawler) GetSummonerRank(req service.GetSummonerRankReq) []
 func ToString(v interface{}) string {
 	b, _ := json.Marshal(v)
 	return string(b)
+}
+
+func smartPage(u string) *rod.Page {
+	var page *rod.Page
+	for i := 0; i < 3; i++ {
+		page = localBrowser.MustPage(u)
+
+		str := page.MustHTML()
+		if strings.Contains(str[:200], "Just a moment") {
+			log.Println(u, "检测到反爬虫，等待5s", i)
+			localBrowser = rod.New().MustConnect()
+			time.Sleep(5 * time.Second)
+		} else {
+			return page
+		}
+	}
+	return page
 }

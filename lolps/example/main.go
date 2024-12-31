@@ -1,30 +1,33 @@
-package lolps
+package main
 
 import (
+	"lckresearch/lolps"
 	"lckresearch/service"
 	"log"
-	"testing"
 )
 
-func TestGetSummonerRank(t *testing.T) {
-	ins := SummonerRankCrawler{}
+func main() {
+	lolps.GetBaseItems()
+	ins := lolps.SummonerRankCrawler{}
 	req := service.GetSummonerRankReq{}
 	req.Region = "kr"
-	req.Start = 1
+	req.Start = 2
 	req.End = 3
 	res := ins.GetSummonerRank(req)
 	log.Println("ur:", res[0].URLPath)
-	champIns := LolPsChampionCrawler{}
-	cmIns := LolPsComparer{}
+	champIns := lolps.LolPsChampionCrawler{}
+	cmIns := lolps.LolPsComparer{}
 
 	{
-		for _, summoner := range res {
-			ins := LolPsMatchCrawler{}
+		for i, summoner := range res {
+			log.Println("第", i+1, "个召唤师")
+			ins := lolps.LolPsMatchCrawler{}
 			req := service.GetMatchListReq{}
 			req.SummonerInfo.URLPath = summoner.URLPath
 			matchList, _ := ins.GetMatchList(req)
 			{
-				for _, match := range matchList {
+				for j, match := range matchList {
+					log.Println("第", j+1, "个比赛")
 					champReq := service.GetChampionItemPerformanceReq{
 						ChampionId: match.ChampionId,
 					}
