@@ -18,7 +18,7 @@ type LolPsChampionCrawler struct {
 var champCache = gcache.New()
 
 func (l *LolPsChampionCrawler) GetChampionItemPerformance(req service.GetChampionItemPerformanceReq) (service.ChampionItemPerformance, error) {
-	val, _ := champCache.GetOrSetFunc(context.Background(), gconv.String(req), func(ctx context.Context) (value interface{}, err error) {
+	val, _ := champCache.GetOrSetFunc(context.Background(), "champ::"+gconv.String(req), func(ctx context.Context) (value interface{}, err error) {
 		u := fmt.Sprintf("https://lol.ps/champ/%d", req.ChampionId)
 		page := smartPage(u)
 		time.Sleep(3 * time.Second)
@@ -33,8 +33,8 @@ func (l *LolPsChampionCrawler) GetChampionItemPerformance(req service.GetChampio
 		}
 		if err != nil {
 			str, _ := page.HTML()
-			log.Println("finish retry", err, str)
-			return service.ChampionItemPerformance{}, nil
+			log.Println("英雄信息抓取失败", champNameCache[req.ChampionId], err, str)
+			return service.ChampionItemPerformance{}, err
 		}
 		els := el.MustElements("li")
 		log.Println("els:", len(els))
@@ -46,9 +46,15 @@ func (l *LolPsChampionCrawler) GetChampionItemPerformance(req service.GetChampio
 		resp.Three = coreItem(`//*[@id="content-container"]/div[1]/section[7]/div/div[2]`, page)
 		resp.Four = coreItem(`//*[@id="content-container"]/div[1]/section[7]/div/div[3]`, page)
 		return resp, nil
-	}, 0)
-	return val.Interface().(service.ChampionItemPerformance), nil
-
+	}, time.Hour*6)
+	// if str, ok := val.Interface().(string); ok {
+	// 	json.Unmarshal([]byte(str), &val)
+	// 	return service.ChampionItemPerformance{}, nil
+	// }
+	ret := service.ChampionItemPerformance{}
+	gconv.Struct(val, &ret)
+	return ret, nil
+	// return val.Interface().(service.ChampionItemPerformance), nil
 }
 
 func coreItem(x string, page *rod.Page) [][]service.ItemPerformance {

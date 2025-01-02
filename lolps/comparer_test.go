@@ -5,10 +5,12 @@ import (
 	"lckresearch/service"
 	"log"
 	"testing"
+	"time"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func TestCompare(t *testing.T) {
-	log.Println("11")
 	GetBaseItems()
 	InitChampionNames()
 	ins := LolPsMatchCrawler{}
@@ -28,7 +30,21 @@ func TestCompare(t *testing.T) {
 	}
 }
 
+type Foo struct {
+	Name string
+}
+
 func TestGetItem(t *testing.T) {
 	item := getItem(3157)
 	fmt.Println(item)
+
+	str := `{"Name":"test"}`
+	f := Foo{}
+	gconv.Struct(str, &f)
+	log.Println(f)
+
+	now := time.Now()
+	time.Sleep(time.Second * 10)
+	s := time.Since(now).Seconds()
+	fmt.Println(s, s/2)
 }

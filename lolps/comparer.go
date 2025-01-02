@@ -90,11 +90,22 @@ func itemsToString(items []service.Item) string {
 	return strings.Join(str, "_")
 }
 
+// 进化装备 -> 原始装备
+var ItemRepeat = map[int]int{
+	3042: 3004, // 魔切 -> 魔宗
+	3121: 3119, // 凛冬之怒 -> 末日寒冬
+	3040: 3003, // 炙天使之拥 -> 大天使之杖
+}
+
 func fiterItems(matchInfo service.MatchInfo) []service.Item {
 	list := matchInfo.ItemList
 	newList := make([]service.Item, 0, len(list))
-	for _, item := range list {
-		item := getItem(item.ItemId)
+	for _, tmp := range list {
+		// 进化装备替换
+		if v, ok := ItemRepeat[tmp.ItemId]; ok {
+			tmp.ItemId = v
+		}
+		item := getItem(tmp.ItemId)
 		if !item.IsCore || item.IsShoes || item.Price < 1900 {
 			// log.Println("忽略价格低于1000的物品", item.Name)
 			continue

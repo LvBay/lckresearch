@@ -28,30 +28,16 @@ func (s *SummonerRankCrawler) GetSummonerRank(req service.GetSummonerRankReq) []
 	var summonerList = make([]service.SummonerInfo, 0, req.End-req.Start+1)
 
 	region := req.Region
-	pageStart := req.Start / 100
-	if pageStart == 0 {
-		pageStart = 1
-	}
-	pageEnd := req.End / 100
-	if pageEnd >= 10 {
-		pageEnd = 10
-	}
-	if pageStart > pageEnd {
-		pageStart = pageEnd
-	}
-	count := req.End - req.Start + 1
 	var err error
 	var el *rod.Element
-	for page := pageStart; page <= pageEnd; page++ {
+
+	pages := getPageInfo(req.Start, req.End, 100)
+	for _, pageInfo := range pages {
 		if len(summonerList) >= req.End-req.Start+1 {
 			break
 		}
-		page := smartPage(fmt.Sprintf("https://lol.ps/ranking/?lane=-1&page=%d&region=%s", page, region))
-		for i := 1; i <= 50; i++ {
-			if count <= 0 {
-				break
-			}
-
+		page := smartPage(fmt.Sprintf("https://lol.ps/ranking/?lane=-1&page=%d&region=%s", pageInfo.Page, region))
+		for i := pageInfo.Start; i <= pageInfo.End; i++ {
 			el, err = page.Timeout(2 * time.Second).ElementX(fmt.Sprintf(`//*[@id="content-container"]/div[4]/div[%d]/div[1]/a[1]`, i))
 			if err != nil {
 				str, _ := page.HTML()
@@ -70,9 +56,9 @@ func (s *SummonerRankCrawler) GetSummonerRank(req service.GetSummonerRankReq) []
 				Name:    strings.Replace(strings.TrimPrefix(u.Path, "/summoner/"), "_", "#", -1),
 			}
 			summonerList = append(summonerList, summoner)
-			count--
 		}
 	}
+
 	log.Printf("抓取%s rank选手排行，数量:%d,id:%v\n", region, len(summonerList), ToString(summonerList))
 	return summonerList
 }
@@ -86,7 +72,6 @@ func smartPage(u string) *rod.Page {
 	var page *rod.Page
 	for i := 0; i < 3; i++ {
 		page = localBrowser.MustPage(u)
-
 		str := page.MustHTML()
 		if strings.Contains(str[:200], "Just a moment") {
 			log.Println(u, "检测到反爬虫，等待5s", i)

@@ -6,9 +6,10 @@ import (
 )
 
 func TestGetChampionItemPerformance(t *testing.T) {
+	InitRedis()
 	ins := LolPsChampionCrawler{}
 	req := service.GetChampionItemPerformanceReq{
-		ChampionId: 65,
+		ChampionId: 112,
 	}
 	ins.GetChampionItemPerformance(req)
 }
